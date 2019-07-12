@@ -145,3 +145,101 @@ def chip_image(img,coords,classes,shape=(300,300)):
             k = k + 1
     
     return images.astype(np.uint8),total_boxes,total_classes
+
+
+# With overlaps
+def chip_image_overlap(img,coords,classes,shape=(300,300),overlap=0.2):
+    """
+    Chip an image and get relative coordinates and classes.  Bounding boxes that pass into
+        multiple chips are clipped: each portion that is in a chip is labeled. For example,
+        half a building will be labeled if it is cut off in a chip. If there are no boxes,
+        the boxes array will be [[0,0,0,0]] and classes [0].
+        Note: This chip_image method is only tested on xView data-- there are some image manipulations that can mess up different images.
+
+    Args:
+        img: the image to be chipped in array format
+        coords: an (N,4) array of bounding box coordinates for that image
+        classes: an (N,1) array of classes for each bounding box
+        shape: an (W,H) tuple indicating width and height of chips
+
+    Output:
+        An image array of shape (M,W,H,C), where M is the number of chips,
+        W and H are the dimensions of the image, and C is the number of color
+        channels.  Also returns boxes and classes dictionaries for each corresponding chip.
+    """
+    height,width,_ = img.shape
+    wn,hn = shape
+    
+    # Initialize numpy array to fill with chip image arrs
+    w_num = 0
+    h_num = 0
+    i = 0
+    while (i+wn) < width:
+        w_num += 1
+        i += int(wn * (1 - overlap))
+    j = 0
+    while (j+hn) < height:
+        h_num += 1
+        j += int(hn * (1 - overlap))
+    images = np.zeros((w_num*h_num,hn,wn,3))
+
+    # Initialize dicts
+    total_boxes = {}
+    total_classes = {}
+    
+    # k is a count of each chip
+    k = 0
+    i = 0
+    while (i+wn) < width:
+        j = 0
+        while (j+hn) < height:
+            # Track boxes that fall within x-range of this chip
+            #min_x = i*wn
+            #max_x = (i+1)*wn
+            min_x = i
+            max_x = min_x+wn
+            x = np.logical_or( np.logical_and((coords[:,0]<max_x),(coords[:,0]>min_x)),
+                               np.logical_and((coords[:,2]<max_x),(coords[:,2]>min_x)))
+            out = coords[x]
+
+            # Track boxes that fall within y-range of this chip
+            #min_y = j*hn
+            #max_y = (j+1)*hn
+            min_y = j
+            max_y = min_y+hn
+            y = np.logical_or( np.logical_and((out[:,1]<max_y),(out[:,1]>min_y)),
+                               np.logical_and((out[:,3]<max_y),(out[:,3]>min_y)))
+            outn = out[y]
+            
+            # Make bbox coords relative to chip (not ff image) and clip all boxes within clip size bounds
+            out = np.transpose(np.vstack((np.clip(outn[:,0]-min_x,0,wn-1),
+                                          np.clip(outn[:,1]-min_y,0,hn-1),
+                                          np.clip(outn[:,2]-min_x,0,wn-1),
+                                          np.clip(outn[:,3]-min_y,0,hn-1))))
+
+            # Get classes for the boxes that are in this chip
+            box_classes = classes[x][y]
+            
+            # If there are objects in this chip
+            if out.shape[0] != 0:
+                # Add boxes and chips to corresponding dicts
+                total_boxes[k] = out
+                total_classes[k] = box_classes
+            else:
+                # Else, there are no objects in this chip
+                total_boxes[k] = np.array([[0,0,0,0]])
+                total_classes[k] = np.array([0])
+            
+            # Chip actual image array
+            chip = img[min_y:max_y, min_x:max_x,:3]
+            images[k]=chip
+            
+            k += 1
+
+            # Increment j index according to overlap
+            j += int(hn * (1 - overlap))
+
+        # Increment i index according to overlap
+        i += int(wn * (1 - overlap))
+    
+    return images.astype(np.uint8),total_boxes,total_classes

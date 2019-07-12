@@ -1,0 +1,42 @@
+# This script is to be called after creating the JPEGImages and Annotations.
+#  Here, we create the ImageSets/Main/train.txt val.txt. Since xView only has
+#  labels for the training set, we will split the train set into a train and
+#  val set. Here we randomly sample from the full train set to create them.
+
+import os
+import glob
+from random import shuffle
+
+# Directory to write train.txt and val.txt files to
+IMAGESETS_DIR = "/raid/inkawhna/WORK/xView-voc-devkit/xView-voc/ImageSets/Main"
+ANNOTATIONS_DIR = "/raid/inkawhna/WORK/xView-voc-devkit/xView-voc/Annotations"
+
+#train_file = open(IMAGESETS_DIR+"/train.txt")
+#val_file = open(IMAGESETS_DIR+"/val.txt")
+
+# read in all filenames from annotations dir into list
+files = glob.glob(ANNOTATIONS_DIR+"/*.xml")
+print("Read in {} files".format(len(files)))
+files = [f.split("/")[-1][:-4] for f in files]
+
+# shuffle list
+shuffle(files)
+
+# create sample index array of 500 indexes of which will make up the val set
+
+
+# train_cnt = 0
+# val_cnt = 0
+
+# for i in range len filenames list
+
+	# if i in samples list
+
+		# val_file.write(filename)
+		# val_cnt += 1
+	# else
+		
+		# train_file.write(filename)
+		# train_cnt += 1
+
+# print("Wrote {} train and {} val files".format(train_cnt, val_cnt))

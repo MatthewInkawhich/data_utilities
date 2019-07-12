@@ -17,7 +17,7 @@ limitations under the License.
 
 import numpy as np
 from PIL import Image
-import tensorflow as tf
+#import tensorflow as tf
 from PIL import Image, ImageDraw
 import skimage.filters as filters
 
@@ -30,7 +30,7 @@ Image augmentation utilities to be used for processing the dataset.  Importantly
 """
 
 
-def rotate_image_and_boxes(img, deg, pivot, boxes):
+def rotate_image_and_boxes(img, deg, pivot, boxes, classes):
     """
     Rotates an image and corresponding bounding boxes.  Bounding box rotations are kept axis-aligned,
         so multiples of non 90-degrees changes the area of the bounding box.
@@ -64,9 +64,13 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
     #  [(cos(theta), -sin(theta))] DOT [xmin, xmax] = [xmin*cos(theta) - ymin*sin(theta), xmax*cos(theta) - ymax*sin(theta)]
     #  [sin(theta), cos(theta)]        [ymin, ymax]   [xmin*sin(theta) + ymin*cos(theta), xmax*cos(theta) + ymax*cos(theta)]
 
+    assert(len(boxes) == len(classes))
+
     newboxes = []
-    for box in boxes:
-        xmin, ymin, xmax, ymax = box
+    newclasses = []
+
+    for b in range(len(boxes)):
+        xmin, ymin, xmax, ymax = boxes[b]
         #The 'x' values are not centered by the x-center (shape[0]/2)
         #but rather the y-center (shape[1]/2)
         
@@ -91,8 +95,73 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
 
         if not (np.all(c[1] == 0) and np.all(c[0] == 0)):
             newboxes.append(newbox)
-    
-    return imgR[padY[0] : -padY[1], padX[0] : -padX[1]], newboxes
+            newclasses.append(classes[b])
+ 
+    return imgR[padY[0] : -padY[1], padX[0] : -padX[1]], newboxes, newclasses
+
+
+#def rotate_image_and_boxes(img, deg, pivot, boxes):
+#    """
+#    Rotates an image and corresponding bounding boxes.  Bounding box rotations are kept axis-aligned,
+#        so multiples of non 90-degrees changes the area of the bounding box.
+#    Args:
+#        img: the image to be rotated in array format
+#        deg: an integer representing degree of rotation
+#        pivot: the axis of rotation. By default should be the center of an image, but this can be changed.
+#        boxes: an (N,4) array of boxes for the image
+#    Output:
+#        Returns the rotated image array along with correspondingly rotated bounding boxes
+#    """
+#
+#    if deg < 0:
+#        deg = 360-deg
+#    deg = int(deg)
+#        
+#    angle = 360-deg
+#    padX = [img.shape[0] - pivot[0], pivot[0]]
+#    padY = [img.shape[1] - pivot[1], pivot[1]]
+#    imgP = np.pad(img, [padY, padX, [0,0]], 'constant').astype(np.uint8)
+#    #scipy ndimage rotate takes ~.7 seconds
+#    #imgR = ndimage.rotate(imgP, angle, reshape=False)
+#    #PIL rotate uses ~.01 seconds
+#    imgR = Image.fromarray(imgP).rotate(angle)
+#    imgR = np.array(imgR)
+#    
+#    theta = deg * (np.pi/180)
+#    R = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
+#    #  [(cos(theta), -sin(theta))] DOT [xmin, xmax] = [xmin*cos(theta) - ymin*sin(theta), xmax*cos(theta) - ymax*sin(theta)]
+#    #  [sin(theta), cos(theta)]        [ymin, ymax]   [xmin*sin(theta) + ymin*cos(theta), xmax*cos(theta) + ymax*cos(theta)]
+#
+#    newboxes = []
+#    for box in boxes:
+#        xmin, ymin, xmax, ymax = box
+#        #The 'x' values are not centered by the x-center (shape[0]/2)
+#        #but rather the y-center (shape[1]/2)
+#        
+#        xmin -= pivot[1]
+#        xmax -= pivot[1]
+#        ymin -= pivot[0]
+#        ymax -= pivot[0]
+#
+#        bfull = np.array([ [xmin,xmin,xmax,xmax] , [ymin,ymax,ymin,ymax]])
+#        c = np.dot(R,bfull) 
+#        c[0] += pivot[1]
+#        c[0] = np.clip(c[0],0,img.shape[1])
+#        c[1] += pivot[0]
+#        c[1] = np.clip(c[1],0,img.shape[0])
+#        
+#        if np.all(c[1] == img.shape[0]) or np.all(c[1] == 0):
+#            c[0] = [0,0,0,0]
+#        if np.all(c[0] == img.shape[1]) or np.all(c[0] == 0):
+#            c[1] = [0,0,0,0]
+#
+#        newbox = np.array([np.min(c[0]),np.min(c[1]),np.max(c[0]),np.max(c[1])]).astype(np.int64)
+#
+#        if not (np.all(c[1] == 0) and np.all(c[0] == 0)):
+#            newboxes.append(newbox)
+#    
+#    return imgR[padY[0] : -padY[1], padX[0] : -padX[1]], newboxes
+
 
 def shift_image(image,bbox):
     """
@@ -183,4 +252,5 @@ def draw_bboxes(img,boxes):
         
         for j in range(3):
             draw.rectangle(((xmin+j, ymin+j), (xmax+j, ymax+j)), outline="red")
+
     return source

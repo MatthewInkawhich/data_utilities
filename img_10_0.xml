@@ -1,0 +1,16 @@
+<annotation>
+  <folder>xView-voc</folder>
+  <filename>img_10_0.jpg</filename>
+  <owner>NAI</owner>
+  <segmented>0</segmented>
+  <source>
+    <database>xView-voc Database</database>
+    <annotation>xView 2018</annotation>
+    <image>xView</image>
+  </source>
+  <size>
+    <width>600</width>
+    <height>600</height>
+    <depth>3</depth>
+  </size>
+</annotation>
