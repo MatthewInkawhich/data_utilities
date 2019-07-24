@@ -163,7 +163,11 @@ if not os.path.isdir(NEW_ROOT+"/JPEGImages"):
 
 
 # Get all of the unique .tif names from all_chips
-tif_names = np.unique(all_chips)
+#tif_names = np.unique(all_chips)
+
+# Temp: just want val tifs
+tif_names = [line.rstrip('\n')+".tif" for line in open("../xView-meta/ff_val.txt")]
+print("Only using val tifs!!!:\n", tif_names)
 
 xyz = 0
 # For each unique .tif
@@ -184,7 +188,7 @@ for unique_tif in tif_names:
     # Chip the image into smaller pieces
     arr = wv.get_image(OLD_ROOT+"/train_images/"+unique_tif)  
     #c_img, c_box, c_cls = wv.chip_image(img=arr, coords=ff_coords, classes=ff_classes, shape=CHIP_SHAPE)
-    c_img, c_box, c_cls = wv.chip_image_overlap(img=arr, coords=ff_coords, classes=ff_classes, shape=CHIP_SHAPE, overlap=OVERLAP)
+    c_img, c_box, c_cls, _ = wv.chip_image_overlap(img=arr, coords=ff_coords, classes=ff_classes, shape=CHIP_SHAPE, overlap=OVERLAP)
     num_chips = len(c_img)
     print("\tNum Chips: ",num_chips)
 
@@ -247,8 +251,8 @@ for unique_tif in tif_names:
 
                 # TIME TO WRITE**
                 # First, check that the files do not already exist before writing
-                if os.path.exists(NEW_ROOT+"/Annotations/"+xml_name) and os.path.exists(NEW_ROOT+"/JPEGImages/"+chip_name):
-                    continue
+                #if os.path.exists(NEW_ROOT+"/Annotations/"+xml_name) and os.path.exists(NEW_ROOT+"/JPEGImages/"+chip_name):
+                #    continue
                 
                 # Convert the integer class labels to english labels
                 final_english_classes = [class_names_LUT[lbl] for lbl in final_classes]

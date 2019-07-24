@@ -9,10 +9,10 @@ import random
 import sys
 
 # Directory to write train.txt and val.txt files to
-CHIP_SIZE = 200
-IMAGESETS_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/ImageSets/Main"
-ANNOTATIONS_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/Annotations"
-IMAGES_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/JPEGImages"
+CHIP_SIZE = 800
+IMAGESETS_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/ImageSets/Main".format(CHIP_SIZE)
+ANNOTATIONS_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/Annotations".format(CHIP_SIZE)
+IMAGES_DIR = "/raid/inkawhmj/WORK/data/xView-voc-{}/JPEGImages".format(CHIP_SIZE)
 META_DIR = "/raid/inkawhmj/WORK/data/xView-meta"
 FF_TRAIN = META_DIR + "/ff_train.txt"
 FF_VAL = META_DIR + "/ff_val.txt"

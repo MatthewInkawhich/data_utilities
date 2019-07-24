@@ -13,11 +13,17 @@ from collections import defaultdict
 import math
 
 
-annotation_dir = os.path.join(os.path.expanduser('~'), 'WORK', 'data', 'xView-voc-700', 'Annotations')
+chip_size = 800
+annotation_dir = os.path.join(os.path.expanduser('~'), 'WORK', 'data', 'xView-voc-{}'.format(chip_size), 'Annotations')
 annotation_names = glob.glob(annotation_dir + '/*.xml')
+total = len(annotation_names)
 
+# Make sure new directory exists
+new_annotation_dir = annotation_dir.replace('Annotations', 'Annotations_new')
+if not os.path.isdir(new_annotation_dir):
+    os.mkdir(new_annotation_dir)
 
-def clip(x, minimum=0, maximum=699):
+def clip(x, minimum=0, maximum=chip_size-1):
     if x < minimum:
         return minimum
     elif x > maximum:
@@ -25,7 +31,8 @@ def clip(x, minimum=0, maximum=699):
     else:
         return x
 
-for fn in annotation_names:
+for i, fn in enumerate(annotation_names):
+    print('{} / {}'.format(i, total))
     tree = ET.parse(fn)
     objs = tree.findall('object')
     for ix, obj in enumerate(objs):

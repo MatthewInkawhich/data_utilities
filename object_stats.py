@@ -10,7 +10,7 @@ from collections import defaultdict
 import math
 
 
-annotation_dir = os.path.join(os.path.expanduser('~'), 'WORK', 'data', 'xView-voc-700', 'Annotations')
+annotation_dir = os.path.join(os.path.expanduser('~'), 'WORK', 'data', 'xView-voc-ff', 'Annotations')
 annotation_names = glob.glob(annotation_dir + '/*.xml')
 
 stat = defaultdict(lambda: defaultdict(int))
@@ -30,21 +30,6 @@ for fn in annotation_names:
         width = x2 - x1 + 1
         height = y2 - y1 + 1
         area = width * height
-        if x2-x1 <= 0:
-            print("x2-x1 <= 0", "x2:", x2, "x1:", x1)
-        if y2-y1 <= 0:
-            print("y2-y1 <= 0", "y2:", y2, "y1:", y1)
-        
-        if x1 < 0 or x1 >= 700:
-            print("x1 out of bounds:", x1)
-        if x2 < 0 or x2 >= 700:
-            print("x2 out of bounds:", x2)
-            print(fn)
-        if y1 < 0 or y1 >= 700:
-            print("y1 out of bounds:", y1)
-        if y2 < 0 or y2 >= 700:
-            print("y2 out of bounds:", y2)
-"""
         # Add to stat
         stat[name]['count'] += 1
         stat[name]['sum'] += area
@@ -69,6 +54,3 @@ with open('object_stats.csv', mode='w') as csv_file:
         
 
 print(len(stat))
-"""
-
-

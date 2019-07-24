@@ -171,31 +171,56 @@ def chip_image_overlap(img,coords,classes,shape=(300,300),overlap=0.2):
     wn,hn = shape
     
     # Initialize numpy array to fill with chip image arrs
-    w_num = 0
-    h_num = 0
+    x_offsets = []
+    y_offsets = []
+    last_edge = 0
     i = 0
     while (i+wn) < width:
-        w_num += 1
+        x_offsets.append(i)
+        last_edge = i+wn
         i += int(wn * (1 - overlap))
+    # handle end case for x
+    if last_edge < width - 1:
+        # In this case, there is a strip at the right edge that did not get considered
+        x_offsets.append(width - wn)
+
+    last_edge = 0
     j = 0
     while (j+hn) < height:
-        h_num += 1
+        y_offsets.append(j)
+        last_edge = j+hn
         j += int(hn * (1 - overlap))
-    images = np.zeros((w_num*h_num,hn,wn,3))
+    # handle end case for y
+    if last_edge < height - 1:
+        # In this case, there is a strip at the right edge that did not get considered
+        y_offsets.append(height - hn)
 
+
+    w_num = len(x_offsets)
+    h_num = len(y_offsets)
+
+    #print("width:", width)
+    #print("height:", height)
+    #print("wn:", wn)
+    #print("hn:", hn)
+    #print("x_offsets:", x_offsets)
+    #print("y_offsets:", y_offsets)
+    #exit()
+
+    images = np.zeros((w_num*h_num,hn,wn,3))
+    
     # Initialize dicts
     total_boxes = {}
     total_classes = {}
+
+    # keep track of x and y offsets of each chip for stitching later
+    offsets = []
     
     # k is a count of each chip
     k = 0
-    i = 0
-    while (i+wn) < width:
-        j = 0
-        while (j+hn) < height:
+    for i in x_offsets:
+        for j in y_offsets:
             # Track boxes that fall within x-range of this chip
-            #min_x = i*wn
-            #max_x = (i+1)*wn
             min_x = i
             max_x = min_x+wn
             x = np.logical_or( np.logical_and((coords[:,0]<max_x),(coords[:,0]>min_x)),
@@ -203,8 +228,6 @@ def chip_image_overlap(img,coords,classes,shape=(300,300),overlap=0.2):
             out = coords[x]
 
             # Track boxes that fall within y-range of this chip
-            #min_y = j*hn
-            #max_y = (j+1)*hn
             min_y = j
             max_y = min_y+hn
             y = np.logical_or( np.logical_and((out[:,1]<max_y),(out[:,1]>min_y)),
@@ -236,10 +259,6 @@ def chip_image_overlap(img,coords,classes,shape=(300,300),overlap=0.2):
             
             k += 1
 
-            # Increment j index according to overlap
-            j += int(hn * (1 - overlap))
+            offsets.append([min_x, min_y])
 
-        # Increment i index according to overlap
-        i += int(wn * (1 - overlap))
-    
-    return images.astype(np.uint8),total_boxes,total_classes
+    return images.astype(np.uint8),total_boxes,total_classes,offsets
