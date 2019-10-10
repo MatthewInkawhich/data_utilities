@@ -1,8 +1,7 @@
 #!/bin/bash
 
-python -u create_xView_voc_dataset_with_rotations.py 200 &> logs/v200_newval
-python -u create_xView_voc_dataset_with_rotations.py 400 &> logs/v400_newval
-python -u create_xView_voc_dataset_with_rotations.py 600 &> logs/v600_newval
-python -u create_xView_voc_dataset_with_rotations.py 800 &> logs/v800_newval
+python -u create_val_chip_offsets.py 600 &> logs/600_offsets
+python -u create_val_chip_offsets.py 200 &> logs/200_offsets
+python -u create_val_chip_offsets.py 400 &> logs/400_offsets
 
 echo "Done!!"

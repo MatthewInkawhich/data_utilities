@@ -10,6 +10,9 @@ from collections import defaultdict
 import math
 
 
+label_file_path = '../xView-meta/xview_class_labels_clean.txt'
+labels = [line.rstrip('\n').lower() for line in open(label_file_path)]
+
 annotation_dir = os.path.join(os.path.expanduser('~'), 'WORK', 'data', 'xView-voc-ff', 'Annotations')
 annotation_names = glob.glob(annotation_dir + '/*.xml')
 
@@ -17,9 +20,21 @@ stat = defaultdict(lambda: defaultdict(int))
 
 isqrt = lambda x: int(math.sqrt(x))
 
+min_objs = 1000000
+max_objs = 0
+min_objs_fn = ""
+max_objs_fn = ""
+total_objs = 0
 for fn in annotation_names:
     tree = ET.parse(fn)
     objs = tree.findall('object')
+    total_objs += len(objs)
+    if len(objs) < min_objs:
+        min_objs = len(objs)
+        min_objs_fn = fn.split('/')[-1]
+    if len(objs) > max_objs:
+        max_objs = len(objs)
+        max_objs_fn = fn.split('/')[-1]
     for ix, obj in enumerate(objs):
         name = obj.find('name').text.lower().strip()
         bbox = obj.find('bndbox')
@@ -41,11 +56,13 @@ for fn in annotation_names:
 
 # Print stats
 with open('object_stats.csv', mode='w') as csv_file:
-    fieldnames = ['class', 'avg', 'min', 'max']
+    #fieldnames = ['class', 'avg', 'min', 'max']
+    fieldnames = ['avg', 'min', 'max']
     writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
     writer.writeheader()
-    for key, _ in stat.items():
-        writer.writerow({'class': key, 'avg': isqrt(stat[key]['sum'] // stat[key]['count']), 'min': isqrt(stat[key]['min']), 'max': isqrt(stat[key]['max'])})
+    for key in labels:
+        #writer.writerow({'class': key, 'avg': isqrt(stat[key]['sum'] // stat[key]['count']), 'min': isqrt(stat[key]['min']), 'max': isqrt(stat[key]['max'])})
+        writer.writerow({'avg': isqrt(stat[key]['sum'] // stat[key]['count']), 'min': isqrt(stat[key]['min']), 'max': isqrt(stat[key]['max'])})
         print("key:", key)
         print("avg:", stat[key]['sum'] // stat[key]['count'], int(math.sqrt(stat[key]['sum'] // stat[key]['count'])))
         print("min:", stat[key]['min'], int(math.sqrt(stat[key]['min'])))
@@ -54,3 +71,8 @@ with open('object_stats.csv', mode='w') as csv_file:
         
 
 print(len(stat))
+
+print("Min objs:", min_objs_fn, min_objs)
+print("Max objs:", max_objs_fn, max_objs)
+print("Avg objs: {} / {} = {}".format(total_objs, len(annotation_names), total_objs/len(annotation_names)))
+
