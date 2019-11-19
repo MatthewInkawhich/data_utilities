@@ -11,6 +11,7 @@ import wv_util as wv
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import glob
 import argparse
 import os
 import skimage.io 
@@ -109,13 +110,8 @@ def clip(old, minimum, maximum):
 
 """ Code for xView -> xView-voc format
 """
-### Read input arg
-parser = argparse.ArgumentParser(description='Create Annotations and images for xview chips')
-parser.add_argument('chip_size', type=int)
-args = parser.parse_args()
-
 ######### Inputs
-CHIP_SIZE = args.chip_size
+CHIP_SIZE = 600
 OLD_ROOT = "../xView"
 NEW_ROOT = "../xView-voc-{}".format(CHIP_SIZE)
 CHIP_SHAPE = (CHIP_SIZE, CHIP_SIZE)
@@ -137,23 +133,6 @@ print(all_coords.shape)
 print(all_chips.shape)
 print(all_classes.shape)
 
-'''
-# Find area of smallest target
-# Smallest area = 0
-# Largest area = 10332468
-smallest_area = 100000
-largest_area = 0
-for bbox in all_coords:
-    xmin,ymin,xmax,ymax = bbox
-    area = (xmax-xmin)*(ymax-ymin)
-    if area < smallest_area:
-        smallest_area = area
-    if area > largest_area:
-        largest_area = area
-print("Smallest Area: ",smallest_area)
-print("Largest Area: ",largest_area)
-exit()
-'''
 
 # Create directories if they don't exist
 if not os.path.isdir(NEW_ROOT+"/Annotations"):
@@ -161,20 +140,22 @@ if not os.path.isdir(NEW_ROOT+"/Annotations"):
 if not os.path.isdir(NEW_ROOT+"/JPEGImages"):
     os.makedirs(NEW_ROOT+"/JPEGImages")
 
-
 # Get all of the unique .tif names from all_chips
 #tif_names = np.unique(all_chips)
 
-# Temp: just want val tifs
-tif_names = [line.rstrip('\n')+".tif" for line in open("../xView-meta/ff_val.txt")]
-print("Only using val tifs!!!:\n", tif_names)
+# Create list of all image paths in xView training set
+tif_path_list = glob.glob('../xView/mini_train_images' + '/*.tif')
+# Create list of all tif names from tif_path_list
+tif_names = [x.split('/')[-1] for x in tif_path_list]
 
-xyz = 0
+
+print("tif_names:", tif_names)
+exit()
+
 # For each unique .tif
-for unique_tif in tif_names:
+for tif_idx, unique_tif in enumerate(tif_names):
 
-    xyz += 1
-    print("Working on: [{} / {}] {} ".format(xyz, len(tif_names), unique_tif))
+    print("Working on: [{} / {}] {} ".format(tif_idx+1, len(tif_names), unique_tif))
 
     # Make sure the file exists
     if not os.path.isfile(OLD_ROOT+"/train_images/"+unique_tif):
@@ -241,28 +222,28 @@ for unique_tif in tif_names:
             #if not((final_classes == []) and (final_boxes == [])) and (tmp_img.max() != tmp_img.min()):
 
             # Get rid of fully corrupted chips
-            if tmp_img.max() != tmp_img.min():
+            #if tmp_img.max() != tmp_img.min():
                 
-                # Construct the saved chip name
-                chip_name = "img_{}_{}_rot{}.png".format(unique_tif.split(".")[0], i, deg)
+            # Construct the saved chip name
+            chip_name = "img_{}_{}_rot{}.jpg".format(unique_tif.split(".")[0], i, deg)
 
-                # Construct the saved XML filename
-                xml_name = chip_name.replace(".png",".xml")
+            # Construct the saved XML filename
+            xml_name = chip_name.replace(".jpg",".xml")
 
-                # TIME TO WRITE**
-                # First, check that the files do not already exist before writing
-                #if os.path.exists(NEW_ROOT+"/Annotations/"+xml_name) and os.path.exists(NEW_ROOT+"/JPEGImages/"+chip_name):
-                #    continue
-                
-                # Convert the integer class labels to english labels
-                final_english_classes = [class_names_LUT[lbl] for lbl in final_classes]
-                assert(len(final_boxes) == len(final_english_classes))
+            # TIME TO WRITE**
+            # First, check that the files do not already exist before writing
+            #if os.path.exists(NEW_ROOT+"/Annotations/"+xml_name) and os.path.exists(NEW_ROOT+"/JPEGImages/"+chip_name):
+            #    continue
+            
+            # Convert the integer class labels to english labels
+            final_english_classes = [class_names_LUT[lbl] for lbl in final_classes]
+            assert(len(final_boxes) == len(final_english_classes))
 
 
-                # Create and populate the XML file for this chip
-                XMLWriter_VOCformat(NEW_ROOT+"/Annotations/"+xml_name, "xView-voc", chip_name, CHIP_SHAPE[1], CHIP_SHAPE[0], final_english_classes, final_boxes)
+            # Create and populate the XML file for this chip
+            XMLWriter_VOCformat(NEW_ROOT+"/Annotations/"+xml_name, "xView-voc", chip_name, CHIP_SHAPE[1], CHIP_SHAPE[0], final_english_classes, final_boxes)
 
-                # Save the chipped image 
-                skimage.io.imsave(NEW_ROOT+"/JPEGImages/"+chip_name, tmp_img) #, quality=100)   
+            # Save the chipped image 
+            skimage.io.imsave(NEW_ROOT+"/JPEGImages/"+chip_name, tmp_img) #, quality=100)   
 
 

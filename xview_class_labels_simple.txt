@@ -1,0 +1,7 @@
+1:Fixed-wing Aircraft
+2:Passenger Vehicle
+3:Building
+4:Truck
+5:Railway Vehicle
+6:Maritime Vessel
+7:Engineering Vessel
